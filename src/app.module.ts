@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { BookModule } from './book/book.module';
+import { AuthorModule } from './author/author.module';
 @Module({
   
   imports: [
@@ -18,6 +19,7 @@ import { BookModule } from './book/book.module';
       autoLoadEntities: true,
     }),
     BookModule,
+    AuthorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

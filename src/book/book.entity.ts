@@ -25,6 +25,6 @@ export class Book {
     @Column()
     isbn: string;
 
-    @ManyToOne(type => Author, author => author.books)
+    @ManyToOne(() => Author, author => author.books)
     author: Author;
 }   

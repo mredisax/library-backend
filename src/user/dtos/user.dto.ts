@@ -6,6 +6,12 @@ export class CreateUserDto{
     readonly password: string;
     readonly phone: string;
 }
+export class UserPayloadDto{
+    readonly id: number;
+    readonly email: string;
+    readonly is_admin: string;
+}
+
 export class EditUserPasswordDto{
     readonly id: number;
     readonly password: string;

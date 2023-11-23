@@ -22,17 +22,6 @@ export class UserController {
         }
     }
 
-
-    // @Post('/email')
-    // async findByEmail(@Body() data: any){
-    //     const user = await this.usersService.findOneByEmail(data.mail)
-    //     if (!user) {
-    //         throw new NotFoundException("User with email ${data.mail} does not exist!")
-    //     } else {
-    //         return user;
-    //     }
-    // }
-
     @Post('/register')
     async register(@Body() user: CreateUserDto) {
         return this.usersService.register(user);
@@ -56,4 +45,14 @@ export class UserController {
         }
         return this.usersService.delete(id);
     }
+
+    // @Post('/email')
+    // async findByEmail(@Body() data: any){
+    //     const user = await this.usersService.findOneByEmail(data.mail)
+    //     if (!user) {
+    //         throw new NotFoundException("User with email ${data.mail} does not exist!")
+    //     } else {
+    //         return user;
+    //     }
+    // }
 }

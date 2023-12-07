@@ -16,12 +16,12 @@ export class BookService {
         private readonly authorRepository: Repository<Author>,
     ) { }
 
-    async findAll(): Promise<Book[]> {
+    async findAllWithAutors(): Promise<Book[]> {
         //return books with its authors
         return await this.bookRepository.find({ relations: ["author"], order: { title: "ASC" } });
     }
 
-    async findOne(id: number): Promise<Book> {
+    async findOneWithAutors(id: number): Promise<Book> {
         return await this.bookRepository.findOne({ relations: ["author"] , where: { id: id }});
     }
 

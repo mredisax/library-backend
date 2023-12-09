@@ -17,7 +17,10 @@ export class Booking {
     borrowAt: Date;
 
     @Column()
-    returnAt: Date;
+    returnTo: Date;
+
+    @Column({ nullable: true })
+    returnedAt: Date;
 
     @Column({ default: false })
     wasReturned: boolean;

@@ -28,13 +28,23 @@ export class ReservationService {
         const book = await this.bookRepository.findOne({ where: { id: reservation.bookId } });
         const uid = uuidv4();
         
-        
         if (!user) {
             throw new Error("User not found");
         }
         if (!book) {
             throw new Error("Book not found");
         }
+
+        //check if book is already reserved
+        const isReserved = await this.reservationRepository.createQueryBuilder("reservation")
+        .where("reservation.book.id = :bookId", { bookId: book.id })
+        .getOne();
+
+        if (isReserved) {
+            throw new Error("Book is already reserved");
+            return;
+        }
+
         const newReservation = this.reservationRepository.create({
             uid: uid,
             book: book,
@@ -49,8 +59,40 @@ export class ReservationService {
         
         const reservation = this.reservationRepository.createQueryBuilder("reservation")
         .where("reservation.book.id = :bookId", { bookId: bookId })
+        .leftJoinAndSelect("reservation.user", "user")
         .getOne();
         return reservation;
     }
 
+    async remove(id: number): Promise<string> {
+        await this.reservationRepository.delete(id);
+        return "Reservation deleted";
+    }
+
+    async removeByBookId(bookId: number): Promise<string> {
+        await this.reservationRepository.delete({ book: { id: bookId } });
+        return "Reservation deleted";
+    }
+
+    async getReservationByUser(userId: number): Promise<any> {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const reservation = await this.reservationRepository.createQueryBuilder("reservation")
+        .where("reservation.user.id = :userId", { userId: userId })
+        .leftJoinAndSelect("reservation.user", "user")
+        .leftJoinAndSelect("reservation.book", "book")
+        .getMany();
+        return reservation;
+    }
+
+    async findOne(id: number): Promise<any> {
+        const reservation = await this.reservationRepository.createQueryBuilder("reservation")
+        .where("reservation.id = :id", { id: id })
+        .leftJoinAndSelect("reservation.user", "user")
+        .leftJoinAndSelect("reservation.book", "book")
+        .getOne();
+        return reservation;
+    }
 }

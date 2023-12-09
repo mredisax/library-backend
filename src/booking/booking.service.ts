@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Book } from '../book/book.entity';
 import { User } from '../user/user.entity';
 import { CreateReturnDto } from './dto/create-return.dto';
+import { CreateProlongDto } from './dto/create-prolongation.dto';
 
 @Injectable()
 export class BookingService {
@@ -48,7 +49,7 @@ export class BookingService {
                     book: book,
                     user: user,
                     borrowAt: borrowDate,
-                    returnAt: returnDate,
+                    returnTo: returnDate,
                 });
                 newBooking.push(b);
             }
@@ -72,7 +73,7 @@ export class BookingService {
         .leftJoinAndSelect("booking.book", "book")
         .leftJoinAndSelect("booking.user", "user")
         .getOne();
-        console.log(booking);
+
         const book = await this.bookRepository.findOne({ where: { id: booking.book.id } });
         const user = await this.userRepository.findOne({ where: { id: booking.user.id } });
         
@@ -83,25 +84,51 @@ export class BookingService {
             throw new Error("User not found");
         } 
         
-        booking.returnAt = returnDate;
+        booking.returnedAt = returnDate;
         booking.wasReturned = true;
 
         return await this.bookingRepository.save(booking);
     }
 
-    async prolong(booking: Booking): Promise<any> {
-        const returnDate = new Date();
-        returnDate.setMonth(returnDate.getMonth() + 1);
-        const book = await this.bookRepository.findOne({ where: { id: booking.book.id } });
-        const user = await this.userRepository.findOne({ where: { id: booking.user.id } });
-        if (!book) {
-            throw new Error("Book not found");
+    async prolong(prolongDto: CreateProlongDto): Promise<any> {
+        const booking = await this.bookingRepository.createQueryBuilder("booking")
+            .where("booking.id = :id", { id: prolongDto.bookingId })
+            .leftJoinAndSelect("booking.book", "book")
+            .leftJoinAndSelect("booking.user", "user")
+            .getOne();
+    
+        if (!booking) {
+            throw new Error("Booking not found");
         }
-        if (!user) {
-            throw new Error("User not found");
+    
+        const currentDate = new Date();
+        const timeDifference = booking.returnTo.getTime() - currentDate.getTime();
+
+        if (timeDifference < 1209600000) {
+            const newReturnDate = new Date(booking.returnTo);
+            newReturnDate.setMonth(newReturnDate.getMonth() + 1);
+    
+            booking.returnTo = newReturnDate;
+            return await this.bookingRepository.save(booking);
+        } else {
+            return "You can prolong only if you have less than 14 days to return";
         }
-        booking.returnAt = returnDate;
-        return await this.bookingRepository.save(booking);
     }
     
+    async getBookingByUser(userId: number): Promise<any> {
+        return await this.bookingRepository.createQueryBuilder("booking")
+        .where("booking.user.id = :userId", { userId: userId })
+        .leftJoinAndSelect("booking.book", "book")
+        .leftJoinAndSelect("booking.user", "user")
+        .getMany();
+    }
+
+    async getBookingByBook(bookId: number): Promise<any> {
+        return await this.bookingRepository.createQueryBuilder("booking")
+        .where("booking.book.id = :bookId", { bookId: bookId })
+        .leftJoinAndSelect("booking.book", "book")
+        .leftJoinAndSelect("booking.user", "user")
+        .getMany();
+    }
+
 }

@@ -26,6 +26,9 @@ export class Book {
     @Column()
     isbn: string;
 
+    @Column({ nullable: true })
+    cover: string;
+
     @ManyToOne(() => Author, author => author.books)
     @JoinTable()
     author: Author;

@@ -36,7 +36,8 @@ export class BookService {
             year: book.year,
             isbn: book.isbn,
             uid: uuidv4(),
-            author: author
+            author: author,
+            cover: book.cover
     });
     return await this.bookRepository.save(newBook);
     }

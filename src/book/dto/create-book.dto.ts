@@ -7,5 +7,6 @@ export class CreateBookDto {
     readonly year: number;
     readonly isbn: string;
     readonly author: number;
+    readonly cover: string;
 
 }

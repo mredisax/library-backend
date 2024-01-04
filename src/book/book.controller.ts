@@ -15,13 +15,13 @@ export class BookController {
 
     @Get()
     async findAll(): Promise<Book[]> {
-        return this.bookService.findAll();
+        return this.bookService.findAllWithAutors();
 
     }
 
     @Get(':id')
     async findOne(@Param('id') id: number): Promise<Book> {
-        return this.bookService.findOne(id);
+        return this.bookService.findOneWithAutors(id);
     }
 
     @Delete(':id')

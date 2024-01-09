@@ -8,6 +8,7 @@ import { Book } from '../book/book.entity';
 import { User } from '../user/user.entity';
 import { CreateReturnDto } from './dto/create-return.dto';
 import { CreateProlongDto } from './dto/create-prolongation.dto';
+import { Reservation } from 'src/reservation/reservation.entity';
 
 @Injectable()
 export class BookingService {
@@ -22,6 +23,9 @@ export class BookingService {
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
 
+        @InjectRepository(Reservation)
+        private readonly reservationRepository: Repository<Reservation>,
+
     ) { }
 
     async create(booking: CreateBookingDto): Promise<any> {
@@ -33,17 +37,21 @@ export class BookingService {
         const uid = uuidv4();
     
         if (!user) {
-            throw new Error("User not found");
+            return "User not found";
         }
         if (!books) {
-            throw new Error("Book not found");
+            return "Book not found";
         }
     
         const newBooking = [];
         for (const book of books) {
             const isAvailable = await this.checkAvailability(book.id);
-            if (isAvailable) {
-                console.log("isAvailable");
+            const isReserved = await this.checkReservation(book.id, booking.userId);
+            if(!isAvailable || isReserved) {
+                return "Book is not available"
+                
+            }
+            if (isAvailable && !isReserved) {
                 let b = await this.bookingRepository.create({
                     uid: uid,
                     book: book,
@@ -52,11 +60,27 @@ export class BookingService {
                     returnTo: returnDate,
                 });
                 newBooking.push(b);
+                await this.removeReservation(book.id);
             }
         }
         return await this.bookingRepository.save(newBooking);
     }
     
+    async checkReservation(bookId: number, userId: number): Promise<any> {
+        const reservation = await this.reservationRepository.createQueryBuilder("reservation")
+        .where("reservation.book.id = :bookId", { bookId: bookId })
+        .leftJoinAndSelect("reservation.user", "user")
+        .getOne();
+        console.log(userId);
+        //check if reservation is
+        if(reservation) {
+            if(reservation.user.id == userId) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
 
     async checkAvailability(bookId: number): Promise<any>{
             const booking = await this.bookingRepository.createQueryBuilder("booking")
@@ -64,7 +88,12 @@ export class BookingService {
             .andWhere("booking.wasReturned = :wasReturned", { wasReturned: false })
             .getOne();
             return booking ? false : true;
-        }
+    }
+
+    async removeReservation(bookId: number): Promise<any> {
+        await this.reservationRepository.delete({ book: { id: bookId } });
+        return "Reservation deleted";
+    }
 
     async return(returnDto: CreateReturnDto): Promise<any> {
         const returnDate = new Date();
